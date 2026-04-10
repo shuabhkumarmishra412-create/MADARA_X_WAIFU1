@@ -13,10 +13,10 @@ async def get_balance(user_id):
 
 # ---------------- BALANCE IMAGES ---------------- #
 BALANCE_IMAGES = [
-    "https://files.catbox.moe/3saw6n.jpg",
-    "https://files.catbox.moe/3ilay5.jpg",
-    "https://files.catbox.moe/i28al7.jpg",
-    "https://files.catbox.moe/k7t6y7.jpg",
+    "https://files.catbox.moe/i008an.jpg",
+    "https://files.catbox.moe/16h9vi.jpg",
+    "https://files.catbox.moe/qg2nso.jpg",
+    "https://files.catbox.moe/tp0lup.jpg",
     "https://files.catbox.mo/h0ftuw.jpg",
     "https://files.catbox.moe/syanmk.jpg",
     "https://files.catbox.moe/shslw1.jpg",
