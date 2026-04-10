@@ -5,8 +5,11 @@ import time
 from pyrogram import Client, filters
 from pyrogram.errors import ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from TEAMZYRO import LOGGER
 from TEAMZYRO import *
 from TEAMZYRO.unit.zyro_help import HELP_DATA  
+
+LOG = LOGGER(__name__) 
 
 # 🔹 Function to Calculate Uptime
 START_TIME = time.time()
@@ -81,6 +84,8 @@ async def start_private_command(client, message):
     
     username = f"@{message.from_user.username}" if message.from_user.username else "N/A"
     try:
+        username = f"@{message.from_user.username}" if message.from_user.username else "N/A"
+    try:
         await app.send_message(
             chat_id=GLOG,
             text=(
@@ -92,6 +97,96 @@ async def start_private_command(client, message):
     except ChatWriteForbidden:
         # Ignore when bot cannot write in log chat, so /start still works for users.
         pass
+    except Exception as exc:
+        # Any logging failure should not block /start response in private chat.
+        LOG.warning("Failed to send /start log to GLOG (%s): %s", GLOG, exc)
+    import os
+import importlib.util
+import random
+import time
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from TEAMZYRO import *
+from TEAMZYRO.unit.zyro_help import HELP_DATA  
+from pyrogram import Client, filters
+from pyrogram.errors import ChatWriteForbidden
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from TEAMZYRO import LOGGER
+from TEAMZYRO import *
+from TEAMZYRO.unit.zyro_help import HELP_DATA  
+
+LOG = LOGGER(__name__)
+
+# 🔹 Function to Calculate Uptime
+START_TIME = time.time()
+
+def get_uptime():
+    uptime_seconds = int(time.time() - START_TIME)
+    hours, remainder = divmod(uptime_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours}h {minutes}m {seconds}s"
+
+# 🔹 Function to Generate Private Start Message & Buttons
+async def generate_start_message(client, message):
+    bot_user = await client.get_me()
+    bot_name = bot_user.first_name
+    ping = round(time.time() - message.date.timestamp(), 2)
+    uptime = get_uptime()
+
+    
+    caption = f"""🍃 ɢʀᴇᴇᴛɪɴɢs, ɪ'ᴍ {bot_name} 🫧, ɴɪᴄᴇ ᴛᴏ ᴍᴇᴇᴛ ʏᴏᴜ!
+╭━━━━━━━╾❁✦❁╼━━━━━━━╮
+⟡ ɪ ᴀᴍ ʏᴏᴜʀ ᴡᴀɪғᴜ ɢᴇɴɪᴇ!  
+    sᴜᴍᴍᴏɴ ᴄᴜᴛᴇ ᴡᴀɪғᴜs  
+    ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴄʜᴀᴛ ✧
+
+⟡ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ  
+@@ -56,68 +60,87 @@ async def generate_group_start_message(client):
+            InlineKeyboardButton("◦sᴜᴘᴘᴏʀᴛ◦", url="https://t.me/+dv_rcq5uIXhmMWM1"),
+        ]
+    ]
+    return caption, buttons
+
+# 🔹 Private Start Command Handler
+@app.on_message(filters.command("start") & filters.private)
+async def start_private_command(client, message):
+    # Check if user exists in user_collection
+    existing_user = await user_collection.find_one({"id": message.from_user.id})
+    
+    # Save user data only if they don't exist in the collection
+    if not existing_user:
+        user_data = {
+            "id": message.from_user.id,
+            "username": message.from_user.username,
+            "first_name": message.from_user.first_name,
+            "last_name": message.from_user.last_name,
+            "start_time": time.time()
+        }
+        await user_collection.insert_one(user_data)
+
+    caption, buttons = await generate_start_message(client, message)
+    media = random.choice(START_MEDIA)
+    
+    await app.send_message(
+        chat_id=GLOG,
+        text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
+    )
+    username = f"@{message.from_user.username}" if message.from_user.username else "N/A"
+    try:
+        await app.send_message(
+            chat_id=GLOG,
+            text=(
+                f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n"
+                f"<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n"
+                f"<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}"
+            ),
+        )
+    except ChatWriteForbidden:
+        # Ignore when bot cannot write in log chat, so /start still works for users.
+        pass
+    except Exception as exc:
+        # Any logging failure should not block /start response in private chat.
+        LOG.warning("Failed to send /start log to GLOG (%s): %s", GLOG, exc)
     
     # Check if media is image or video based on extension
     if media.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
@@ -105,6 +200,25 @@ async def start_private_command(client, message):
             video=media,
             caption=caption,
             reply_markup=InlineKeyboardMarkup(buttons)  # Pass InlineKeyboardMarkup directly
+        )
+    try:
+        if media.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            await message.reply_photo(
+                photo=media,
+                caption=caption,
+                reply_markup=InlineKeyboardMarkup(buttons)  # Pass InlineKeyboardMarkup directly
+            )
+        else:
+            await message.reply_video(
+                video=media,
+                caption=caption,
+                reply_markup=InlineKeyboardMarkup(buttons)  # Pass InlineKeyboardMarkup directly
+            )
+    except Exception as exc:
+        LOG.warning("Failed to send /start media '%s': %s. Falling back to text.", media, exc)
+        await message.reply_text(
+            caption,
+            reply_markup=InlineKeyboardMarkup(buttons)
         )
 
 # 🔹 Group Start Command Handler
