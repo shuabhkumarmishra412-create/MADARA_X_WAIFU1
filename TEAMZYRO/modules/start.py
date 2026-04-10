@@ -3,6 +3,7 @@ import importlib.util
 import random
 import time
 from pyrogram import Client, filters
+from pyrogram.errors import ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from TEAMZYRO import *
 from TEAMZYRO.unit.zyro_help import HELP_DATA  
@@ -78,10 +79,19 @@ async def start_private_command(client, message):
     caption, buttons = await generate_start_message(client, message)
     media = random.choice(START_MEDIA)
     
-    await app.send_message(
-        chat_id=GLOG,
-        text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
-    )
+    username = f"@{message.from_user.username}" if message.from_user.username else "N/A"
+    try:
+        await app.send_message(
+            chat_id=GLOG,
+            text=(
+                f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n"
+                f"<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n"
+                f"<b>ᴜsᴇʀɴᴀᴍᴇ :</b> {username}"
+            ),
+        )
+    except ChatWriteForbidden:
+        # Ignore when bot cannot write in log chat, so /start still works for users.
+        pass
     
     # Check if media is image or video based on extension
     if media.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
