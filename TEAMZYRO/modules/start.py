@@ -73,11 +73,11 @@ async def generate_start_message(client, message):
 ➺ ᴜᴘᴛɪᴍᴇ: {uptime}"""
 
     buttons = [
-        [InlineKeyboardButton("🟢 ᴀᴅᴅ ᴍᴇ ᴛᴏ ɢʀᴏᴜᴘ", url=f"https://t.me/{bot_user.username}?startgroup=true")],
-        [InlineKeyboardButton("🔴 ɖᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/II_YOUR_VILLAIN_II"), 
-         InlineKeyboardButton("🔵 sᴜᴘᴘᴏʀᴛ", url="https://t.me/+dv_rcq5uIXhmMWM1")],
-        [InlineKeyboardButton("🟡 ᴄʜᴀɴɴᴇʟ", url="https://t.me/+Imyf3M9TO5k1ODRl")],
-        [InlineKeyboardButton("🟣 ʜᴇʟᴘ ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅ", callback_data="open_help")]
+        [InlineKeyboardButton("🟢 Add Me to Group (Success)", url=f"https://t.me/{bot_user.username}?startgroup=true")],
+        [InlineKeyboardButton("🔴 Developer (Angry)", url="https://t.me/II_YOUR_VILLAIN_II"), 
+         InlineKeyboardButton("🔵 Support (Primary)", url="https://t.me/+dv_rcq5uIXhmMWM1")],
+        [InlineKeyboardButton("🟡 Channel", url="https://t.me/+Imyf3M9TO5k1ODRl")],
+        [InlineKeyboardButton("🟣 Help and Command", callback_data="open_help")]
     ]
     
     return caption, buttons
