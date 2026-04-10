@@ -1,0 +1,41 @@
+[10-Apr-26 17:53:30 - INFO] - TEAMZYRO.modules - Modules to load: ['gacha', 'hug', 'joinlog', 'stats', 'gen', 'valentine', 'uno', 'upload', 'gmine', 'eval', 'bonus', 'que', 'convert', 'checkdb', 'gift', 'harem', 'update', 'rarity', 'bcast', 'trade', 'addbal', 'transfer', 'leaderboard', 'database', 'propose', 'hclaim', 'flip', 'challenge', 'rank', 'rob', 'mines', 'start', 'guess', 'massage', 'sudo', 'mongobg', 'wordchain', 'market', 'ctime', 'user', 'brain', 'shop', 'uno_card', 'total', 'ping', 'inlinequery', 'marry', 'battle', 'fav', 'balance', 'sips', 'check']
+[10-Apr-26 17:53:31 - INFO] - TEAMZYRO.modules - 𝐀𝐥𝐥 𝐅𝐞𝐚𝐭𝐮𝐫𝐞𝐬 𝐋𝐨𝐚𝐝𝐞𝐝 𝐁𝐚𝐛𝐲🥳...
+[10-Apr-26 17:55:31 - INFO] - TEAMZYRO - ╔═════ஜ۩۞۩ஜ════╗
+  ☠︎︎MADE BY GOJOXNETWORK☠︎︎
+╚═════ஜ۩۞۩ஜ════╝
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-125' coro=<Session.recv_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/session/session.py:427> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-129' coro=<Session.ping_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/session/session.py:400> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-133' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-134' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-135' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-136' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-137' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-138' coro=<Dispatcher.handler_worker() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/dispatcher.py:339> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:55:32 - ERROR] - asyncio - Task was destroyed but it is pending!
+task: <Task pending name='Task-139' coro=<Client.updates_watchdog() running at /home/codespace/.local/lib/python3.12/site-packages/pyrogram/client.py:452> wait_for=<Future pending cb=[Task.task_wakeup()]>>
+[10-Apr-26 17:58:38 - INFO] - TEAMZYRO.modules - Modules to load: ['gacha', 'hug', 'joinlog', 'stats', 'gen', 'valentine', 'uno', 'upload', 'gmine', 'eval', 'bonus', 'que', 'convert', 'checkdb', 'gift', 'harem', 'update', 'rarity', 'bcast', 'trade', 'addbal', 'transfer', 'leaderboard', 'database', 'propose', 'hclaim', 'flip', 'challenge', 'rank', 'rob', 'mines', 'start', 'guess', 'massage', 'sudo', 'mongobg', 'wordchain', 'market', 'ctime', 'user', 'brain', 'shop', 'uno_card', 'total', 'ping', 'inlinequery', 'marry', 'battle', 'fav', 'balance', 'sips', 'check']
+[10-Apr-26 17:58:39 - INFO] - TEAMZYRO.modules - 𝐀𝐥𝐥 𝐅𝐞𝐚𝐭𝐮𝐫𝐞𝐬 𝐋𝐨𝐚𝐝𝐞𝐝 𝐁𝐚𝐛𝐲🥳...
+[10-Apr-26 18:08:49 - INFO] - TEAMZYRO.modules - Modules to load: ['gacha', 'hug', 'joinlog', 'stats', 'gen', 'valentine', 'uno', 'upload', 'gmine', 'eval', 'bonus', 'que', 'convert', 'checkdb', 'gift', 'harem', 'update', 'rarity', 'bcast', 'trade', 'addbal', 'transfer', 'leaderboard', 'database', 'propose', 'hclaim', 'flip', 'challenge', 'rank', 'rob', 'mines', 'start', 'guess', 'massage', 'sudo', 'mongobg', 'wordchain', 'market', 'ctime', 'user', 'brain', 'shop', 'uno_card', 'total', 'ping', 'inlinequery', 'marry', 'battle', 'fav', 'balance', 'sips', 'check']
+[10-Apr-26 18:08:50 - INFO] - TEAMZYRO.modules - 𝐀𝐥𝐥 𝐅𝐞𝐚𝐭𝐮𝐫𝐞𝐬 𝐋𝐨𝐚𝐝𝐞𝐝 𝐁𝐚𝐛𝐲🥳...
+[10-Apr-26 18:10:10 - ERROR] - telegram.ext.Application - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.12/site-packages/telegram/ext/_application.py", line 1195, in process_update
+    await coroutine
+  File "/home/codespace/.local/lib/python3.12/site-packages/telegram/ext/_basehandler.py", line 153, in handle_update
+    return await self.callback(update, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/MADARA_X_WAIFU/TEAMZYRO/modules/ping.py", line 9, in ping
+    if str(update.effective_user.id) not in sudo_users:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.local/lib/python3.12/site-packages/motor/core.py", line 983, in __getitem__
+    self.database, self.name + "." + name, _delegate=self.delegate[name]
+                   ~~~~~~~~~~~~~~~~^~~~~~
+TypeError: can only concatenate str (not "int") to str

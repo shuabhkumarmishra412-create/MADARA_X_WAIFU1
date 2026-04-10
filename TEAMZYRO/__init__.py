@@ -50,7 +50,7 @@ MUSJ_JOIN = os.getenv("MUSJ_JOIN", "https://t.me/+8KU5ZDxvZyw0N2U1")
 
 START_MEDIA = os.getenv(
     "START_MEDIA",
-    "https://files.catbox.moe/3kd6oq.jpg,https://files.catbox.moe/nkg2ly.jpg,https://files.catbox.moe/0zvwpt.jpg,https://files.catbox.moe/z7d8i6.jpg"
+    "https://files.catbox.moe/aw6zui.jpg"
 ).split(',')
 
 PHOTO_URL = [
