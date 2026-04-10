@@ -35,7 +35,7 @@ def LOGGER(name: str) -> logging.Logger:
 
 api_id = int(os.getenv("API_ID", "23343216"))
 api_hash = os.getenv("API_HASH", "1d66f21cd828dc22b80e3750719bd94a")
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("TOKEN", "").strip() or "8264339422:AAFbQyMJcg8vTMCTXNvtQv5BAl4EOHHrYJ8"
 
 GLOG = os.getenv("GLOG", "gojo_waifu")
 CHARA_CHANNEL_ID = os.getenv("CHARA_CHANNEL_ID", "gojo_waifu")
@@ -72,7 +72,9 @@ OWNER_ID = int(os.getenv("OWNER_ID", "7553434931"))
 # --------------------- TELEGRAM BOT CONFIGURATION -----------------------
 command_filter = f.create(lambda _, __, message: message.text and message.text.startswith("/"))
 application = Application.builder().token(TOKEN).build()
-ZYRO = Client("Shivu", bot_token=TOKEN)
+ZYRO = Client(
+    ":memory:", api_id=api_id, api_hash=api_hash, bot_token=TOKEN
+)
 
 # -------------------------- DATABASE SETUP ------------------------------
 ddw = AsyncIOMotorClient(mongo_url)
