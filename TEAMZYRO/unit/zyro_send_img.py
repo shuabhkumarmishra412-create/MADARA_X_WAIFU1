@@ -1,54 +1,59 @@
-from TEAMZYRO import *
 import random
 import asyncio
-from telegram import Update
-from telegram.ext import CallbackContext
+import time
+from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
+from TEAMZYRO import app, collection, group_user_totals_collection
 
 log = "-1002792716047"
 
-async def delete_message(chat_id, message_id, context):
-    await asyncio.sleep(300)  # 5 minutes (300 seconds)
+# Dictionaries to track progress
+message_counters = {}
+last_characters = {}
+first_correct_guesses = {}
+
+# Updated Rarity Chart with all 15 categories
+RARITY_WEIGHTS = {
+    "⚪️ Low": (40, True),              
+    "🟠 Medium": (20, True),           
+    "🔴 High": (12, True),             
+    "🎩 Special Edition": (8, True),   
+    "🪽 Elite Edition": (6, True),     
+    "🪐 Exclusive": (4, True),         
+    "💞 Valentine": (2, False),         
+    "🎃 Halloween": (2, False),        
+    "❄️ Winter": (1.5, False),          
+    "🏖 Summer": (1.2, False),          
+    "🎗 Royal": (0.5, False),           
+    "💸 Luxury Edition": (0.5, False),  
+    "🍃 echhi": (3, True),             # Added
+    "🌧️ Rainy Edition": (1.5, False),   # Added
+    "🎍 Festival": (1.5, False)         # Added
+}
+
+async def delete_message(chat_id, message_id, client):
+    await asyncio.sleep(300)  # 5 minutes
     try:
-        await context.bot.delete_message(chat_id, message_id)
+        await client.delete_messages(chat_id, message_id)
     except Exception as e:
         print(f"Error deleting message: {e}")
 
-RARITY_WEIGHTS = {
-    "⚪️ Low": (40, True),              # Most frequent
-    "🟠 Medium": (20, True),           # Less frequent than Low
-    "🔴 High": (12, True),             # Rare but obtainable
-    "🎩 Special Edition": (8, True),   # Very rare
-    "🪽 Elite Edition": (6, True),     # Extremely rare
-    "🪐 Exclusive": (4, True),         # Ultra-rare
-    "💞 Valentine": (2, False),         # Special Valentine's rarity
-    "🎃 Halloween": (2, False),        # Halloween themed rarity (DISABLED)
-    "❄️ Winter": (1.5, False),          # Winter themed rarity
-    "🏖 Summer": (1.2, False),          # Summer-themed rarity
-    "🎗 Royal": (0.5, False),           # Royal rarity (Bid only)
-    "💸 Luxury Edition": (0.5, False)   # Luxury Edition (Shop only)
-}
-
-async def send_image(update: Update, context: CallbackContext) -> None:
-    chat_id = update.effective_chat.id
-
-    # Fetch all characters from MongoDB
+async def send_image(client, chat_id: int) -> None:
+    # Fetch characters matching allowed rarities
     all_characters = list(await collection.find({"rarity": {"$in": [k for k, v in RARITY_WEIGHTS.items() if v[1]]}}).to_list(length=None))
 
     if not all_characters:
-        await context.bot.send_message(chat_id, "No characters found with allowed rarities in the database.")
         return
 
-    # Filter characters with valid rarity
     available_characters = [
         c for c in all_characters 
         if 'id' in c and c.get('rarity') is not None and RARITY_WEIGHTS.get(c['rarity'], (0, False))[1]
     ]
 
     if not available_characters:
-        await context.bot.send_message(chat_id, "No available characters with the allowed rarities.")
         return
 
-    # Weighted random selection
+    # Weighted selection
     cumulative_weights = []
     cumulative_weight = 0
     for character in available_characters:
@@ -65,32 +70,53 @@ async def send_image(update: Update, context: CallbackContext) -> None:
     if not selected_character:
         selected_character = random.choice(available_characters)
 
-    # Clear first_correct_guesses if exists
-    last_characters[chat_id] = character
+    # State reset for guessing
+    last_characters[chat_id] = selected_character
     last_characters[chat_id]['timestamp'] = time.time()
-    
     if chat_id in first_correct_guesses:
         del first_correct_guesses[chat_id]
 
-    # Check if the character has a video URL
-    if 'vid_url' in selected_character:
-        sent_message = await context.bot.send_video(
-            chat_id=chat_id,
-            video=selected_character['vid_url'],
-            caption=f"""✨ A {selected_character['rarity']} Character Appears! ✨
-🔍 Use /guess to claim this mysterious character!
-💫 Hurry, before someone else snatches them!""",
-            parse_mode='Markdown'
-        )
-    else:
-        sent_message = await context.bot.send_photo(
-            chat_id=chat_id,
-            photo=selected_character['img_url'],
-            caption=f"""✨ A {selected_character['rarity']} Character Appears! ✨
-🔍 Use /guess to claim this mysterious character!
-💫 Hurry, before someone else snatches them!""",
-            parse_mode='Markdown'
-        )
+    # Spawn Caption in Tiny Caps & Blockquote
+    caption_text = (
+        f"<blockquote>✨ ᴀ {selected_character['rarity']} ᴄʜᴀʀᴀᴄᴛᴇʀ ᴀᴘᴘᴇᴀʀs! ✨\n\n"
+        f"🔍 ᴜsᴇ /guess ᴛᴏ ᴄʟᴀɪᴍ ᴛʜɪs ᴍʏsᴛᴇʀɪᴏᴜs ᴄʜᴀʀᴀᴄᴛᴇʀ!\n"
+        f"💫 ʜᴜʀʀʏ, ʙᴇғᴏʀᴇ sᴏᴍᴇᴏɴᴇ ᴇʟsᴇ sɴᴀᴛᴄʜᴇs ᴛʜᴇᴍ!</blockquote>"
+    )
 
-    # Schedule message deletion after 5 minutes
-    asyncio.create_task(delete_message(chat_id, sent_message.message_id, context))
+    try:
+        if 'vid_url' in selected_character and selected_character['vid_url']:
+            sent_message = await client.send_video(
+                chat_id=chat_id,
+                video=selected_character['vid_url'],
+                caption=caption_text,
+                parse_mode=ParseMode.HTML
+            )
+        else:
+            sent_message = await client.send_photo(
+                chat_id=chat_id,
+                photo=selected_character['img_url'],
+                caption=caption_text,
+                parse_mode=ParseMode.HTML
+            )
+        # Schedule delete
+        asyncio.create_task(delete_message(chat_id, sent_message.id, client))
+    except Exception as e:
+        print(f"Failed to send image: {e}")
+
+@app.on_message(filters.group & ~filters.command & ~filters.bot, group=10)
+async def auto_spawn_watcher(client, message):
+    chat_id = message.chat.id
+
+    if chat_id not in message_counters:
+        message_counters[chat_id] = 0
+    message_counters[chat_id] += 1
+
+
+    group_data = await group_user_totals_collection.find_one({"group_id": str(chat_id)})
+    ctime_limit = group_data.get("ctime", 80) if group_data else 80
+
+
+    if message_counters[chat_id] >= ctime_limit:
+        message_counters[chat_id] = 0  # Reset Counter
+        await send_image(client, chat_id)
+        
