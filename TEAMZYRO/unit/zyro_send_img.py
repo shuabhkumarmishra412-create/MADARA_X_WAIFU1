@@ -103,18 +103,25 @@ async def send_image(client, chat_id: int) -> None:
     except Exception as e:
         print(f"Failed to send image: {e}")
 
-@app.on_message(filters.group & ~filters.command & ~filters.bot, group=10)
+# Fixed Auto Spawn Watcher
+@app.on_message(filters.group, group=10)
 async def auto_spawn_watcher(client, message):
+    # Ignore bot messages
+    if message.from_user and message.from_user.is_bot:
+        return
+        
+    # Ignore commands
+    if message.text and message.text.startswith('/'):
+        return
+
     chat_id = message.chat.id
 
     if chat_id not in message_counters:
         message_counters[chat_id] = 0
     message_counters[chat_id] += 1
 
-
     group_data = await group_user_totals_collection.find_one({"group_id": str(chat_id)})
     ctime_limit = group_data.get("ctime", 80) if group_data else 80
-
 
     if message_counters[chat_id] >= ctime_limit:
         message_counters[chat_id] = 0  # Reset Counter
