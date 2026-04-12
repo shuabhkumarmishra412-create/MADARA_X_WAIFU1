@@ -3,6 +3,7 @@ import requests
 import asyncio
 import hashlib
 from pyrogram import filters, enums
+from pyrogram.errors import ChatWriteForbidden  # Error handling ke liye add kiya gaya hai
 from TEAMZYRO import (
     application,
     CHARA_CHANNEL_ID,
@@ -183,16 +184,24 @@ async def ul(client, message):
                 f"👤 ᴀᴅᴅᴇᴅ ʙʏ <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a></blockquote>"
             )
 
-            if 'img_url' in character:
-                await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=character['img_url'], caption=caption_text, parse_mode=enums.ParseMode.HTML)
-            elif 'vid_url' in character:
-                await client.send_video(chat_id=CHARA_CHANNEL_ID, video=character['vid_url'], caption=caption_text, parse_mode=enums.ParseMode.HTML)
-            else:
-                await client.send_document(chat_id=CHARA_CHANNEL_ID, document=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
+            # --- MAIN FIX APPLIED HERE ---
+            # Ab hum telegram ko 'url' fetch karne nahi bol rahe. Seedha local 'path' file bhej rahe hain.
+            try:
+                if 'img_url' in character:
+                    await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
+                elif 'vid_url' in character:
+                    await client.send_video(chat_id=CHARA_CHANNEL_ID, video=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
+                else:
+                    await client.send_document(chat_id=CHARA_CHANNEL_ID, document=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
+            except ChatWriteForbidden:
+                anim_task.cancel()
+                raise Exception(f"Bot is not an Admin in the log channel (ID: {CHARA_CHANNEL_ID}) or lacks 'Send Media' permissions.")
+            except Exception as send_e:
+                raise Exception(f"Failed to send media to channel: {str(send_e)}")
+            # -------------------------------
 
             await collection.insert_one(character)
 
-            
             anim_task.cancel()
             await processing_message.edit_text(
                 f"<blockquote>✅ ᴡᴀɪғᴜ sᴜᴄᴄᴇssғᴜʟʟʏ ᴜᴘʟᴏᴀᴅᴇᴅ! [■■■■■■■■■■] 100%</blockquote>\n\n"
