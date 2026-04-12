@@ -51,7 +51,6 @@ def get_file_hash(file_path):
             hasher.update(chunk)
     return hasher.hexdigest()
 
-
 def upload_file_with_fallback(file_path):
     if not file_path or not os.path.exists(file_path):
         raise FileNotFoundError("file_path is missing or file does not exist")
@@ -70,7 +69,7 @@ def upload_file_with_fallback(file_path):
     except Exception:
         pass
 
-        try:
+    try:
         graph_url = "https://graph.org/upload"
         with open(file_path, "rb") as file:
             response = requests.post(
@@ -94,7 +93,7 @@ async def animate_upload(message):
         "<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>",
         "<blockquote>📥 ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴍᴇᴅɪᴀ... [■■■□□□□□□□] 30%</blockquote>",
         "<blockquote>🔄 ᴘʀᴏᴄᴇssɪɴɢ ᴅᴀᴛᴀ... [■■■■■■□□□□] 60%</blockquote>",
-        "<blockquote>☁️ ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ sᴇʀᴠᴇʀ... [■■■■■■■■■□] 90%</blockquote>" # Text change for server upload
+        "<blockquote>☁️ ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ sᴇʀᴠᴇʀ... [■■■■■■■■■□] 90%</blockquote>"
     ]
     try:
         while True:
@@ -155,7 +154,6 @@ async def ul(client, message):
                     f"ɴᴀᴍᴇ: <code>{existing_char.get('name')}</code></blockquote>",
                     parse_mode=enums.ParseMode.HTML
                 )
-
             
             uploaded_url = await asyncio.to_thread(upload_file_with_fallback, path)
 
