@@ -5,7 +5,7 @@ import hashlib
 from pyrogram import filters, enums
 from pyrogram.errors import ChatWriteForbidden
 from TEAMZYRO import (
-    ZYRO,  # <-- ZYRO client wapas laya gaya hai
+    ZYRO,
     CHARA_CHANNEL_ID,
     SUPPORT_CHAT,
     OWNER_ID,
@@ -14,7 +14,6 @@ from TEAMZYRO import (
     db,
     SUDO,
     rarity_map
-    # require_power ko filhal hata diya hai taaki silently block na kare
 )
 
 WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...  
@@ -52,22 +51,41 @@ def get_file_hash(file_path):
             hasher.update(chunk)
     return hasher.hexdigest()
 
-def upload_to_catbox(file_path):
+
+def upload_file_with_fallback(file_path):
     if not file_path or not os.path.exists(file_path):
         raise FileNotFoundError("file_path is missing or file does not exist")
 
-    url = "https://catbox.moe/user/api.php"
-    with open(file_path, "rb") as file:
-        response = requests.post(
-            url,
-            data={"reqtype": "fileupload"},
-            files={"fileToUpload": file},
-            timeout=120
-        )
-    if response.status_code == 200 and response.text.startswith("https"):
-        return response.text.strip()
-    else:
-        raise Exception(f"Error uploading to Catbox: {response.status_code} {response.text}")
+    try:
+        catbox_url = "https://catbox.moe/user/api.php"
+        with open(file_path, "rb") as file:
+            response = requests.post(
+                catbox_url,
+                data={"reqtype": "fileupload"},
+                files={"fileToUpload": file},
+                timeout=60
+            )
+        if response.status_code == 200 and response.text.startswith("https"):
+            return response.text.strip()
+    except Exception:
+        pass
+
+        try:
+        graph_url = "https://graph.org/upload"
+        with open(file_path, "rb") as file:
+            response = requests.post(
+                graph_url,
+                files={"file": file},
+                timeout=60
+            )
+        if response.status_code == 200:
+            json_resp = response.json()
+            if isinstance(json_resp, list) and "src" in json_resp[0]:
+                return "https://graph.org" + json_resp[0]["src"]
+    except Exception as e:
+        raise Exception(f"Both Catbox and Graph.org servers are down. Error: {str(e)}")
+        
+    raise Exception("Failed to upload media on both Catbox & Graph.org")
 
 upload_lock = asyncio.Lock()
 
@@ -76,7 +94,7 @@ async def animate_upload(message):
         "<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>",
         "<blockquote>📥 ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴍᴇᴅɪᴀ... [■■■□□□□□□□] 30%</blockquote>",
         "<blockquote>🔄 ᴘʀᴏᴄᴇssɪɴɢ ᴅᴀᴛᴀ... [■■■■■■□□□□] 60%</blockquote>",
-        "<blockquote>☁️ ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ ᴄᴀᴛʙᴏx... [■■■■■■■■■□] 90%</blockquote>"
+        "<blockquote>☁️ ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ sᴇʀᴠᴇʀ... [■■■■■■■■■□] 90%</blockquote>" # Text change for server upload
     ]
     try:
         while True:
@@ -88,7 +106,6 @@ async def animate_upload(message):
     except Exception:
         pass
 
-# Yahan wapas ZYRO lagaya gaya hai
 @ZYRO.on_message(filters.command(["upload"]))
 async def ul(client, message):
     global upload_lock
@@ -139,8 +156,8 @@ async def ul(client, message):
                     parse_mode=enums.ParseMode.HTML
                 )
 
-            # Upload to Catbox
-            catbox_url = await asyncio.to_thread(upload_to_catbox, path)
+            
+            uploaded_url = await asyncio.to_thread(upload_file_with_fallback, path)
 
             rarity_text = rarity_map[rarity]
             available_id = await find_available_id()
@@ -155,15 +172,15 @@ async def ul(client, message):
             }
 
             if reply.photo or reply.document:
-                character['img_url'] = catbox_url
+                character['img_url'] = uploaded_url
             elif reply.video:
-                character['vid_url'] = catbox_url
+                character['vid_url'] = uploaded_url
                 try:
                     thumbs = getattr(reply.video, "thumbs", None)
                     if thumbs and len(thumbs) > 0:
                         thumb_path = await client.download_media(thumbs[0].file_id)
                         if thumb_path and os.path.exists(thumb_path):
-                            thumbnail_url = await asyncio.to_thread(upload_to_catbox, thumb_path)
+                            thumbnail_url = await asyncio.to_thread(upload_file_with_fallback, thumb_path)
                             character['thum_url'] = thumbnail_url
                 except Exception:
                     pass 
@@ -177,7 +194,6 @@ async def ul(client, message):
             )
 
             try:
-                # Direct local file upload to avoid CURL error
                 if 'img_url' in character:
                     await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
                 elif 'vid_url' in character:
