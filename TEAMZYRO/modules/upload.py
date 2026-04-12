@@ -5,7 +5,7 @@ import hashlib
 from pyrogram import filters, enums
 from pyrogram.errors import ChatWriteForbidden
 from TEAMZYRO import (
-    app,  # ZYRO ki jagah app import kiya
+    ZYRO,  # <-- ZYRO client wapas laya gaya hai
     CHARA_CHANNEL_ID,
     SUPPORT_CHAT,
     OWNER_ID,
@@ -13,8 +13,8 @@ from TEAMZYRO import (
     user_collection,
     db,
     SUDO,
-    rarity_map,
-    require_power
+    rarity_map
+    # require_power ko filhal hata diya hai taaki silently block na kare
 )
 
 WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...  
@@ -88,12 +88,11 @@ async def animate_upload(message):
     except Exception:
         pass
 
-# Yahan ZYRO ki jagah app lagaya gaya hai
-@app.on_message(filters.command(["upload"]))
-# @require_power("add_character")  # Isko filhal band kiya hai taaki check ho sake ki code chal raha hai ya nahi
+# Yahan wapas ZYRO lagaya gaya hai
+@ZYRO.on_message(filters.command(["upload"]))
 async def ul(client, message):
     global upload_lock
-    print(f"DEBUG: /upload triggered by {message.from_user.id}") # Console me check karne ke liye
+    print(f"DEBUG: /upload trigger hua by {message.from_user.first_name}")
 
     if upload_lock.locked():
         return await message.reply_text("<blockquote>⏳ ᴀɴᴏᴛʜᴇʀ ᴜᴘʟᴏᴀᴅ ɪs ɪɴ ᴘʀᴏɢʀᴇss. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</blockquote>", parse_mode=enums.ParseMode.HTML)
@@ -140,7 +139,7 @@ async def ul(client, message):
                     parse_mode=enums.ParseMode.HTML
                 )
 
-            # Upload to Catbox for DB
+            # Upload to Catbox
             catbox_url = await asyncio.to_thread(upload_to_catbox, path)
 
             rarity_text = rarity_map[rarity]
@@ -177,8 +176,8 @@ async def ul(client, message):
                 f"👤 ᴀᴅᴅᴇᴅ ʙʏ <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a></blockquote>"
             )
 
-            # Local path send (No URL fetch error)
             try:
+                # Direct local file upload to avoid CURL error
                 if 'img_url' in character:
                     await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
                 elif 'vid_url' in character:
@@ -191,7 +190,6 @@ async def ul(client, message):
             except Exception as send_e:
                 raise Exception(f"Failed to send media to channel: {str(send_e)}")
 
-            # Database me insert karein
             await collection.insert_one(character)
 
             anim_task.cancel()
