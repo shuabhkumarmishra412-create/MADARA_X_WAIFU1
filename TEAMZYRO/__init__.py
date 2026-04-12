@@ -63,8 +63,8 @@ STATS_IMG = ["https://files.catbox.moe/0zvwpt.jpg"]
 SUPPORT_CHAT = os.getenv("SUPPORT_CHAT", "https://t.me/GOJO_NOBITA_II")
 UPDATE_CHAT = os.getenv("UPDATE_CHAT", "https://t.me/GOJO_SUPPORT_GROUP_II")
 
-SUDO = list(map(int, os.getenv("SUDO", "7553434931").split(',')))
-OWNER_ID = int(os.getenv("OWNER_ID", "7553434931"))
+SUDO = list(map(int, os.getenv("SUDO", "8441236350").split(',')))
+OWNER_ID = int(os.getenv("OWNER_ID", "8441236350"))
 
 
 
