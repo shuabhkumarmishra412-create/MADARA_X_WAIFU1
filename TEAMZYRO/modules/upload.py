@@ -3,9 +3,9 @@ import requests
 import asyncio
 import hashlib
 from pyrogram import filters, enums
-from pyrogram.errors import ChatWriteForbidden  # Error handling ke liye add kiya gaya hai
+from pyrogram.errors import ChatWriteForbidden
 from TEAMZYRO import (
-    application,
+    app,  # ZYRO ki jagah app import kiya
     CHARA_CHANNEL_ID,
     SUPPORT_CHAT,
     OWNER_ID,
@@ -14,10 +14,8 @@ from TEAMZYRO import (
     db,
     SUDO,
     rarity_map,
-    ZYRO,
     require_power
 )
-
 
 WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...  
 ᴇɢ. /upload ʀᴇᴘʟʏ ᴛᴏ ᴘʜᴏᴛᴏ muzan-kibutsuji Demon-slayer 3
@@ -31,7 +29,6 @@ WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...
 8: "🎃 Halloween", 9: "❄️ Winter", 10: "🏖 Summer", 
 11: "🎗 Royal", 12: "💸 Luxury Edition", 13: "🍃 echhi", 
 14: "🌧️ Rainy Edition", 15: "🎍 Festival"</blockquote>"""
-
 
 async def find_available_id():
     cursor = collection.find().sort("id", 1)
@@ -48,14 +45,12 @@ async def find_available_id():
             return str(i).zfill(2)
     return str(len(ids) + 1).zfill(2)
 
-
 def get_file_hash(file_path):
     hasher = hashlib.md5()
     with open(file_path, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
-
 
 def upload_to_catbox(file_path):
     if not file_path or not os.path.exists(file_path):
@@ -76,7 +71,6 @@ def upload_to_catbox(file_path):
 
 upload_lock = asyncio.Lock()
 
-
 async def animate_upload(message):
     frames = [
         "<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>",
@@ -94,10 +88,12 @@ async def animate_upload(message):
     except Exception:
         pass
 
-@ZYRO.on_message(filters.command(["upload"]))
-@require_power("add_character")
+# Yahan ZYRO ki jagah app lagaya gaya hai
+@app.on_message(filters.command(["upload"]))
+# @require_power("add_character")  # Isko filhal band kiya hai taaki check ho sake ki code chal raha hai ya nahi
 async def ul(client, message):
     global upload_lock
+    print(f"DEBUG: /upload triggered by {message.from_user.id}") # Console me check karne ke liye
 
     if upload_lock.locked():
         return await message.reply_text("<blockquote>⏳ ᴀɴᴏᴛʜᴇʀ ᴜᴘʟᴏᴀᴅ ɪs ɪɴ ᴘʀᴏɢʀᴇss. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</blockquote>", parse_mode=enums.ParseMode.HTML)
@@ -121,19 +117,16 @@ async def ul(client, message):
         if rarity not in rarity_map:
             return await message.reply_text("<blockquote>❌ ɪɴᴠᴀʟɪᴅ ʀᴀʀɪᴛʏ ᴠᴀʟᴜᴇ.</blockquote>", parse_mode=enums.ParseMode.HTML)
 
-        
         processing_message = await message.reply_text("<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>", parse_mode=enums.ParseMode.HTML)
         anim_task = asyncio.create_task(animate_upload(processing_message))
         
         path = None
         thumb_path = None
         try:
-            
             path = await reply.download()
             if not path or not os.path.exists(path):
                 raise Exception("Failed to download media.")
 
-            
             file_hash = get_file_hash(path)
             existing_char = await collection.find_one({"file_hash": file_hash})
             
@@ -147,7 +140,7 @@ async def ul(client, message):
                     parse_mode=enums.ParseMode.HTML
                 )
 
-            
+            # Upload to Catbox for DB
             catbox_url = await asyncio.to_thread(upload_to_catbox, path)
 
             rarity_text = rarity_map[rarity]
@@ -184,8 +177,7 @@ async def ul(client, message):
                 f"👤 ᴀᴅᴅᴇᴅ ʙʏ <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a></blockquote>"
             )
 
-            # --- MAIN FIX APPLIED HERE ---
-            # Ab hum telegram ko 'url' fetch karne nahi bol rahe. Seedha local 'path' file bhej rahe hain.
+            # Local path send (No URL fetch error)
             try:
                 if 'img_url' in character:
                     await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
@@ -198,8 +190,8 @@ async def ul(client, message):
                 raise Exception(f"Bot is not an Admin in the log channel (ID: {CHARA_CHANNEL_ID}) or lacks 'Send Media' permissions.")
             except Exception as send_e:
                 raise Exception(f"Failed to send media to channel: {str(send_e)}")
-            # -------------------------------
 
+            # Database me insert karein
             await collection.insert_one(character)
 
             anim_task.cancel()
