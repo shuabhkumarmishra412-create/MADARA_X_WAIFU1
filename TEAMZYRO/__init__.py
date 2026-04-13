@@ -35,7 +35,7 @@ def LOGGER(name: str) -> logging.Logger:
 
 api_id = int(os.getenv("API_ID", "23343216"))
 api_hash = os.getenv("API_HASH", "1d66f21cd828dc22b80e3750719bd94a")
-TOKEN = os.getenv("TOKEN", "").strip() or "8264339422:AAFbQyMJcg8vTMCTXNvtQv5BAl4EOHHrYJ8"
+TOKEN = os.getenv("TOKEN", "").strip() or "8264339422:AAGwdHNtrBH8lp0rdHb74eUIcwqFeAAYW5I"
 
 GLOG = os.getenv("GLOG", "abrakatabragiligilichu")
 CHARA_CHANNEL_ID = os.getenv("CHARA_CHANNEL_ID", "abrakatabragiligilichu")
