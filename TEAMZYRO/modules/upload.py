@@ -3,7 +3,8 @@ import requests
 import asyncio
 import hashlib
 from pyrogram import filters, enums
-from pyrogram.errors import ChatWriteForbidden
+from pyrogram.errors import RPCError  # safer import
+
 from TEAMZYRO import (
     ZYRO,
     CHARA_CHANNEL_ID,
@@ -16,33 +17,36 @@ from TEAMZYRO import (
     rarity_map
 )
 
+# ✅ FIX 1: DO NOT CREATE LOCK GLOBALLY
+upload_lock = None
+
+
 WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...  
 ᴇɢ. /upload ʀᴇᴘʟʏ ᴛᴏ ᴘʜᴏᴛᴏ muzan-kibutsuji Demon-slayer 3
 
 ғᴏʀᴍᴀᴛ:- /upload reply character-name anime-name rarity-number
+</blockquote>"""
 
-ᴜsᴇ ʀᴀʀɪᴛʏ ɴᴜᴍʙᴇʀ ᴀᴄᴄᴏʀᴅɪɴɢʟʏ ʀᴀʀɪᴛʏ ᴍᴀᴘ:
-
-1: "⚪️ Low", 2: "🟠 Medium", 3: "🔴 High", 4: "🎩 Special Edition",
-5: "🪽 Elite Edition", 6: "🪐 Exclusive", 7: "💞 Valentine",
-8: "🎃 Halloween", 9: "❄️ Winter", 10: "🏖 Summer", 
-11: "🎗 Royal", 12: "💸 Luxury Edition", 13: "🍃 echhi", 
-14: "🌧️ Rainy Edition", 15: "🎍 Festival"</blockquote>"""
 
 async def find_available_id():
     cursor = collection.find().sort("id", 1)
     ids = []
+
     async for doc in cursor:
         if "id" in doc:
             try:
                 ids.append(int(doc["id"]))
-            except Exception:
+            except:
                 continue
+
     ids.sort()
+
     for i in range(1, len(ids) + 2):
         if i not in ids:
             return str(i).zfill(2)
+
     return str(len(ids) + 1).zfill(2)
+
 
 def get_file_hash(file_path):
     hasher = hashlib.md5()
@@ -51,181 +55,133 @@ def get_file_hash(file_path):
             hasher.update(chunk)
     return hasher.hexdigest()
 
+
 def upload_file_with_fallback(file_path):
-    if not file_path or not os.path.exists(file_path):
-        raise FileNotFoundError("file_path is missing or file does not exist")
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("File not found")
 
     try:
-        catbox_url = "https://catbox.moe/user/api.php"
         with open(file_path, "rb") as file:
-            response = requests.post(
-                catbox_url,
+            r = requests.post(
+                "https://catbox.moe/user/api.php",
                 data={"reqtype": "fileupload"},
                 files={"fileToUpload": file},
                 timeout=60
             )
-        if response.status_code == 200 and response.text.startswith("https"):
-            return response.text.strip()
-    except Exception:
+        if r.status_code == 200 and r.text.startswith("https"):
+            return r.text.strip()
+    except:
         pass
 
     try:
-        graph_url = "https://graph.org/upload"
         with open(file_path, "rb") as file:
-            response = requests.post(
-                graph_url,
+            r = requests.post(
+                "https://graph.org/upload",
                 files={"file": file},
                 timeout=60
             )
-        if response.status_code == 200:
-            json_resp = response.json()
-            if isinstance(json_resp, list) and "src" in json_resp[0]:
-                return "https://graph.org" + json_resp[0]["src"]
+        if r.status_code == 200:
+            data = r.json()
+            if isinstance(data, list) and "src" in data[0]:
+                return "https://graph.org" + data[0]["src"]
     except Exception as e:
-        raise Exception(f"Both Catbox and Graph.org servers are down. Error: {str(e)}")
-        
-    raise Exception("Failed to upload media on both Catbox & Graph.org")
+        raise Exception(f"Upload failed: {e}")
 
-upload_lock = asyncio.Lock()
+    raise Exception("Upload failed on both servers")
 
-async def animate_upload(message):
+
+async def animate_upload(msg):
     frames = [
-        "<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>",
-        "<blockquote>📥 ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴍᴇᴅɪᴀ... [■■■□□□□□□□] 30%</blockquote>",
-        "<blockquote>🔄 ᴘʀᴏᴄᴇssɪɴɢ ᴅᴀᴛᴀ... [■■■■■■□□□□] 60%</blockquote>",
-        "<blockquote>☁️ ᴜᴘʟᴏᴀᴅɪɴɢ ᴛᴏ sᴇʀᴠᴇʀ... [■■■■■■■■■□] 90%</blockquote>"
+        "⏳ Initializing...",
+        "📥 Downloading...",
+        "🔄 Processing...",
+        "☁️ Uploading..."
     ]
     try:
         while True:
-            for frame in frames:
-                await message.edit_text(frame, parse_mode=enums.ParseMode.HTML)
-                await asyncio.sleep(1.2) 
-    except asyncio.CancelledError:
-        pass
-    except Exception:
+            for f in frames:
+                await msg.edit_text(f)
+                await asyncio.sleep(1)
+    except:
         pass
 
-@ZYRO.on_message(filters.command(["upload"]))
+
+@ZYRO.on_message(filters.command("upload"))
 async def ul(client, message):
     global upload_lock
-    print(f"DEBUG: /upload trigger hua by {message.from_user.first_name}")
+
+    # ✅ FIX 2: Initialize lock inside event loop
+    if upload_lock is None:
+        upload_lock = asyncio.Lock()
 
     if upload_lock.locked():
-        return await message.reply_text("<blockquote>⏳ ᴀɴᴏᴛʜᴇʀ ᴜᴘʟᴏᴀᴅ ɪs ɪɴ ᴘʀᴏɢʀᴇss. ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.</blockquote>", parse_mode=enums.ParseMode.HTML)
+        return await message.reply_text("⏳ Another upload in progress...")
 
     async with upload_lock:
         reply = message.reply_to_message
         if not reply:
-            return await message.reply_text("<blockquote>❌ ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴘʜᴏᴛᴏ, ᴅᴏᴄᴜᴍᴇɴᴛ, ᴏʀ ᴠɪᴅᴇᴏ.</blockquote>", parse_mode=enums.ParseMode.HTML)
+            return await message.reply_text("❌ Reply to media")
 
-        args = message.text.strip().split()
+        args = message.text.split()
         if len(args) != 4:
-            return await client.send_message(chat_id=message.chat.id, text=WRONG_FORMAT_TEXT, parse_mode=enums.ParseMode.HTML)
+            return await message.reply_text(WRONG_FORMAT_TEXT)
 
         try:
-            character_name = args[1].replace('-', ' ').title()
-            anime = args[2].replace('-', ' ').title()
+            name = args[1].replace("-", " ").title()
+            anime = args[2].replace("-", " ").title()
             rarity = int(args[3])
-        except Exception:
-            return await message.reply_text("<blockquote>❌ ɪɴᴠᴀʟɪᴅ ᴄᴏᴍᴍᴀɴᴅ ғᴏʀᴍᴀᴛ.</blockquote>", parse_mode=enums.ParseMode.HTML)
+        except:
+            return await message.reply_text("❌ Invalid format")
 
         if rarity not in rarity_map:
-            return await message.reply_text("<blockquote>❌ ɪɴᴠᴀʟɪᴅ ʀᴀʀɪᴛʏ ᴠᴀʟᴜᴇ.</blockquote>", parse_mode=enums.ParseMode.HTML)
+            return await message.reply_text("❌ Invalid rarity")
 
-        processing_message = await message.reply_text("<blockquote>⏳ ɪɴɪᴛɪᴀʟɪᴢɪɴɢ... [□□□□□□□□□□] 0%</blockquote>", parse_mode=enums.ParseMode.HTML)
-        anim_task = asyncio.create_task(animate_upload(processing_message))
-        
+        msg = await message.reply_text("⏳ Processing...")
+        task = asyncio.create_task(animate_upload(msg))
+
         path = None
-        thumb_path = None
+
         try:
             path = await reply.download()
-            if not path or not os.path.exists(path):
-                raise Exception("Failed to download media.")
 
             file_hash = get_file_hash(path)
-            existing_char = await collection.find_one({"file_hash": file_hash})
-            
-            if existing_char:
-                anim_task.cancel() 
-                return await processing_message.edit_text(
-                    f"<blockquote>⚠️ ᴅᴜᴘʟɪᴄᴀᴛᴇ ᴜᴘʟᴏᴀᴅ ᴅᴇᴛᴇᴄᴛᴇᴅ!\n\n"
-                    f"ᴍᴇᴅɪᴀ ᴀʟʀᴇᴀᴅʏ ᴇxɪsᴛs ɪɴ ᴅᴀᴛᴀʙᴀsᴇ.\n"
-                    f"ɪᴅ: <code>{existing_char.get('id')}</code>\n"
-                    f"ɴᴀᴍᴇ: <code>{existing_char.get('name')}</code></blockquote>",
-                    parse_mode=enums.ParseMode.HTML
-                )
-            
-            uploaded_url = await asyncio.to_thread(upload_file_with_fallback, path)
+            existing = await collection.find_one({"file_hash": file_hash})
 
-            rarity_text = rarity_map[rarity]
-            available_id = await find_available_id()
+            if existing:
+                task.cancel()
+                return await msg.edit_text("⚠️ Duplicate detected")
 
-            character = {
-                'name': character_name,
-                'anime': anime,
-                'rarity': rarity_text,
-                'rarity_number': rarity,
-                'id': available_id,
-                'file_hash': file_hash 
+            url = await asyncio.to_thread(upload_file_with_fallback, path)
+
+            char = {
+                "name": name,
+                "anime": anime,
+                "rarity": rarity_map[rarity],
+                "rarity_number": rarity,
+                "id": await find_available_id(),
+                "file_hash": file_hash
             }
 
             if reply.photo or reply.document:
-                character['img_url'] = uploaded_url
+                char["img_url"] = url
+                await client.send_photo(CHARA_CHANNEL_ID, path)
             elif reply.video:
-                character['vid_url'] = uploaded_url
-                try:
-                    thumbs = getattr(reply.video, "thumbs", None)
-                    if thumbs and len(thumbs) > 0:
-                        thumb_path = await client.download_media(thumbs[0].file_id)
-                        if thumb_path and os.path.exists(thumb_path):
-                            thumbnail_url = await asyncio.to_thread(upload_file_with_fallback, thumb_path)
-                            character['thum_url'] = thumbnail_url
-                except Exception:
-                    pass 
+                char["vid_url"] = url
+                await client.send_video(CHARA_CHANNEL_ID, path)
 
-            caption_text = (
-                f"<blockquote>✨ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ: {character_name}\n"
-                f"🎬 ᴀɴɪᴍᴇ ɴᴀᴍᴇ: {anime}\n"
-                f"💎 ʀᴀʀɪᴛʏ: {rarity_text}\n"
-                f"🆔 ɪᴅ: {available_id}\n"
-                f"👤 ᴀᴅᴅᴇᴅ ʙʏ <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a></blockquote>"
-            )
+            await collection.insert_one(char)
 
-            try:
-                if 'img_url' in character:
-                    await client.send_photo(chat_id=CHARA_CHANNEL_ID, photo=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
-                elif 'vid_url' in character:
-                    await client.send_video(chat_id=CHARA_CHANNEL_ID, video=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
-                else:
-                    await client.send_document(chat_id=CHARA_CHANNEL_ID, document=path, caption=caption_text, parse_mode=enums.ParseMode.HTML)
-            except ChatWriteForbidden:
-                anim_task.cancel()
-                raise Exception(f"Bot is not an Admin in the log channel (ID: {CHARA_CHANNEL_ID}) or lacks 'Send Media' permissions.")
-            except Exception as send_e:
-                raise Exception(f"Failed to send media to channel: {str(send_e)}")
+            task.cancel()
+            await msg.edit_text(f"✅ Uploaded {name}")
 
-            await collection.insert_one(character)
-
-            anim_task.cancel()
-            await processing_message.edit_text(
-                f"<blockquote>✅ ᴡᴀɪғᴜ sᴜᴄᴄᴇssғᴜʟʟʏ ᴜᴘʟᴏᴀᴅᴇᴅ! [■■■■■■■■■■] 100%</blockquote>\n\n"
-                f"<blockquote>➲ ᴀᴅᴅᴇᴅ ʙʏ » <a href='tg://user?id={message.from_user.id}'>{message.from_user.first_name}</a>\n"
-                f"➥ ᴄʜᴀʀᴀᴄᴛᴇʀ ɪᴅ: <code>{available_id}</code>\n"
-                f"➥ ʀᴀʀɪᴛʏ: {rarity_text}\n"
-                f"➥ ᴄʜᴀʀᴀᴄᴛᴇʀ ɴᴀᴍᴇ: {character_name}</blockquote>",
-                parse_mode=enums.ParseMode.HTML
-            )
+        except RPCError as e:
+            task.cancel()
+            await msg.edit_text(f"❌ Telegram Error: {e}")
 
         except Exception as e:
-            anim_task.cancel()
-            await processing_message.edit_text(f"<blockquote>❌ ᴜᴘʟᴏᴀᴅ ғᴀɪʟᴇᴅ. ᴇʀʀᴏʀ: <code>{str(e)}</code></blockquote>", parse_mode=enums.ParseMode.HTML)
-        
+            task.cancel()
+            await msg.edit_text(f"❌ Error: {e}")
+
         finally:
-            try:
-                if path and os.path.exists(path):
-                    os.remove(path)
-                if thumb_path and os.path.exists(thumb_path):
-                    os.remove(thumb_path)
-            except Exception:
-                pass
-        
+            if path and os.path.exists(path):
+                os.remove(path)
