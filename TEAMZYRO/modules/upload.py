@@ -70,21 +70,34 @@ def upload_file_with_fallback(file_path):
         pass
 
     try:
-        graph_url = "https://graph.org/upload"
+        telegraph_url = "https://telegra.ph/upload"
         with open(file_path, "rb") as file:
             response = requests.post(
-                graph_url,
+                telegraph_url,
                 files={"file": file},
                 timeout=60
             )
         if response.status_code == 200:
             json_resp = response.json()
             if isinstance(json_resp, list) and "src" in json_resp[0]:
-                return "https://graph.org" + json_resp[0]["src"]
+                return "https://telegra.ph" + json_resp[0]["src"]
+    except Exception:
+        pass
+
+    try:
+        envs_url = "https://envs.sh"
+        with open(file_path, "rb") as file:
+            response = requests.post(
+                envs_url,
+                files={"file": file},
+                timeout=60
+            )
+        if response.status_code == 200 and response.text.startswith("https"):
+            return response.text.strip()
     except Exception as e:
-        raise Exception(f"Both Catbox and Graph.org servers are down. Error: {str(e)}")
+        raise Exception(f"All servers are down. Error: {str(e)}")
         
-    raise Exception("Failed to upload media on both Catbox & Graph.org")
+    raise Exception("Failed to upload media on any server.")
 
 upload_lock = asyncio.Lock()
 
