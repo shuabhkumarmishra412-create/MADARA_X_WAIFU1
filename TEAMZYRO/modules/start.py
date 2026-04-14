@@ -7,11 +7,13 @@ from pyrogram import Client, filters
 from pyrogram.errors import ChatWriteForbidden
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from TEAMZYRO import LOGGER
+
+# 🛠️ FIX: Imported 'app' here instead of 'ZYRO'
 from TEAMZYRO import (
-    ZYRO, # Ensure your client is imported here. I assumed ZYRO based on previous code.
+    app, 
     user_collection,
-    START_MEDIA, # Try importing it explicitly
-    GLOG # Try importing it explicitly
+    START_MEDIA, 
+    GLOG 
 )
 from TEAMZYRO.unit.zyro_help import HELP_DATA  
 
@@ -90,14 +92,14 @@ async def generate_start_message(client, message):
         [InlineKeyboardButton("ɖᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/II_YOUR_VILLAIN_II"), 
          InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/+dv_rcq5uIXhmMWM1")],
         [InlineKeyboardButton("ᴄʜᴀɴɴᴇʟ", url="https://t.me/+Imyf3M9TO5k1ODRl")],
-        [InlineKeyboardButton("🇭 🇪 🇱 🇵  🇦 🇳 🇩  🇨 🇴 🇲 🇲 🇦 🇳 🇩", callback_data="open_help")]
+        [InlineKeyboardButton("Help", callback_data="open_help")]
     ]
     
     return caption, buttons
 
-# FIX: Changed @app to @ZYRO
+# 🛠️ FIX: Changed @ZYRO to @app
 # 🔹 Private Start Command Handler
-@ZYRO.on_message(filters.command("start") & filters.private)
+@app.on_message(filters.command("start") & filters.private)
 async def start_private_command(client, message):
     try:
         existing_user = await user_collection.find_one({"id": message.from_user.id})
@@ -154,10 +156,9 @@ async def start_private_command(client, message):
         LOG.error(f"Error in /start command: {e}")
         await message.reply_text(f"<blockquote>⚠️ ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ ᴡʜɪʟᴇ sᴛᴀʀᴛɪɴɢ: {e}\n\nᴘʟᴇᴀsᴇ ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ.</blockquote>")
 
-
-# FIX: Changed @app to @ZYRO
+# 🛠️ FIX: Changed @ZYRO to @app
 # 🔹 Group Start Command Handler
-@ZYRO.on_message(filters.command("start") & filters.group)
+@app.on_message(filters.command("start") & filters.group)
 async def start_group_command(client, message):
     bot_user = await client.get_me()
     caption = f"<blockquote>🍃 ɪ'ᴍ {bot_user.first_name} 🫧\nɪ sᴘᴀᴡɴ ᴡᴀɪғᴜs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ ғᴏʀ ᴜsᴇʀs ᴛᴏ ɢʀᴀʙ.\nᴜsᴇ /help ғᴏʀ ᴍᴏʀᴇ ɪɴғᴏ.</blockquote>"
@@ -177,7 +178,6 @@ async def start_group_command(client, message):
     except Exception:
         await message.reply_text(text=caption, reply_markup=InlineKeyboardMarkup(buttons))
 
-
 # 🔹 Function to Find Help Modules
 def find_help_modules():
     buttons = []
@@ -186,9 +186,9 @@ def find_help_modules():
         buttons.append(InlineKeyboardButton(button_name, callback_data=f"help_{module_name}"))
     return [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
 
-# FIX: Changed @app to @ZYRO
+# 🛠️ FIX: Changed @ZYRO to @app
 # 🔹 Help Button Click Handler
-@ZYRO.on_callback_query(filters.regex("^open_help$"))
+@app.on_callback_query(filters.regex("^open_help$"))
 async def show_help_menu(client, query: CallbackQuery):
     await asyncio.sleep(1)
     buttons = find_help_modules()
@@ -199,9 +199,9 @@ async def show_help_menu(client, query: CallbackQuery):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-# FIX: Changed @app to @ZYRO
+# 🛠️ FIX: Changed @ZYRO to @app
 # 🔹 Individual Module Help Handler
-@ZYRO.on_callback_query(filters.regex(r"^help_(.+)"))
+@app.on_callback_query(filters.regex(r"^help_(.+)"))
 async def show_help(client, query: CallbackQuery):
     await asyncio.sleep(1)
     module_name = query.data.split("_", 1)[1]
@@ -218,9 +218,9 @@ async def show_help(client, query: CallbackQuery):
     except Exception as e:
         await query.answer("Help load karne me error aayi!", show_alert=True)
 
-
+# 🛠️ FIX: Changed @ZYRO to @app
 # 🔹 Back to Home
-@ZYRO.on_callback_query(filters.regex("^back_to_home$"))
+@app.on_callback_query(filters.regex("^back_to_home$"))
 async def back_to_home(client, query: CallbackQuery):
     await asyncio.sleep(1)
     caption, buttons = await generate_start_message(client, query.message)
