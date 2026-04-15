@@ -5,8 +5,9 @@ import hashlib
 from pyrogram import filters, enums
 from pyrogram.errors import RPCError
 
+# ✅ FIX 1: 'ZYRO' ki jagah 'app' import kiya
 from TEAMZYRO import (
-    ZYRO, # Pichli baar ki tarah, agar main code mein 'app' use hota hai toh ise 'app' kar dena.
+    app, 
     CHARA_CHANNEL_ID,
     SUPPORT_CHAT,
     OWNER_ID,
@@ -20,7 +21,6 @@ from TEAMZYRO import (
 # 🛑 YAHAN APNA IMGBB API KEY DAALNA HAI 🛑
 IMGBB_API_KEY = "95c5713baa2adf32c45f91191939d7ad"
 
-# ✅ FIX 1: DO NOT CREATE LOCK GLOBALLY
 upload_lock = None
 
 WRONG_FORMAT_TEXT = """<blockquote>❌ ᴡʀᴏɴɢ ғᴏʀᴍᴀᴛ...  
@@ -54,7 +54,6 @@ def get_file_hash(file_path):
         for chunk in iter(lambda: f.read(4096), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
-
 
 # 🔄 UPDATED: Multi-Fallback Upload System
 def upload_file_with_fallback(file_path):
@@ -109,7 +108,6 @@ def upload_file_with_fallback(file_path):
 
     raise Exception("Upload failed on all servers (ImgBB, Catbox, Graph)")
 
-
 async def animate_upload(msg):
     frames = [
         "⏳ Initializing...",
@@ -125,11 +123,11 @@ async def animate_upload(msg):
     except:
         pass
 
-@ZYRO.on_message(filters.command("upload"))
+# ✅ FIX 2: @ZYRO.on_message ko @app.on_message kar diya
+@app.on_message(filters.command("upload"))
 async def ul(client, message):
     global upload_lock
 
-    # ✅ FIX 2: Initialize lock inside event loop
     if upload_lock is None:
         upload_lock = asyncio.Lock()
 
